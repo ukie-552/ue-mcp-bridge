@@ -1,0 +1,85 @@
+{
+  "_comment": "UE Editor MCP Server Configuration Example - 外部工具调用MCP的配置示例",
+  "_description": "将此配置添加到您的MCP客户端配置文件中，使AI助手能够控制虚幻引擎编辑器",
+
+  "mcpServers": {
+    "unreal-engine": {
+      "_comment": "MCP服务器名称，可根据需要修改",
+      "command": "node",
+      "args": [
+        "/绝对路径/替换为您的路径/ue-mcp-server/dist/index.js"
+      ],
+      "env": {
+        "MCP_AUTOMATION_HOST": "127.0.0.1",
+        "MCP_AUTOMATION_PORT": "8091"
+      }
+    }
+  },
+
+  "_usage_notes": {
+    "claude_desktop": {
+      "config_file_location": {
+        "macOS": "~/Library/Application Support/Claude/claude_desktop_config.json",
+        "Windows": "%APPDATA%\\Claude\\claude_desktop_config.json"
+      },
+      "steps": [
+        "1. 找到上述配置文件位置",
+        "2. 将 mcpServers 部分复制到配置文件中",
+        "3. 将 args 中的路径修改为您的实际安装路径",
+        "4. 重启 Claude Desktop"
+      ]
+    },
+
+    "other_mcp_clients": {
+      "cursor": "设置 -> MCP Servers -> 添加服务器配置",
+      "windsurf": "设置 -> MCP -> 添加服务器配置",
+      "custom": "参考各客户端文档进行配置"
+    }
+  },
+
+  "_environment_variables": {
+    "MCP_AUTOMATION_HOST": {
+      "description": "WebSocket服务器主机地址",
+      "default": "127.0.0.1",
+      "note": "通常不需要修改，除非UE编辑器运行在其他机器上"
+    },
+    "MCP_AUTOMATION_PORT": {
+      "description": "WebSocket服务器端口",
+      "default": "8091",
+      "note": "需要与UE插件中配置的端口一致"
+    }
+  },
+
+  "_prerequisites": {
+    "step_1": "确保已安装 Node.js 18.0.0 或更高版本",
+    "step_2": "在 ue-mcp-server 目录下运行 npm install && npm run build",
+    "step_3": "确保UE项目中已启用 McpAutomationBridge 插件",
+    "step_4": "UE编辑器启动后会自动在8091端口启动WebSocket服务器"
+  },
+
+  "_full_example_macos": {
+    "mcpServers": {
+      "unreal-engine": {
+        "command": "node",
+        "args": ["/Users/YourName/Projects/虚幻引擎-mcp/ue-mcp-server/dist/index.js"],
+        "env": {
+          "MCP_AUTOMATION_HOST": "127.0.0.1",
+          "MCP_AUTOMATION_PORT": "8091"
+        }
+      }
+    }
+  },
+
+  "_full_example_windows": {
+    "mcpServers": {
+      "unreal-engine": {
+        "command": "node",
+        "args": ["C:/Users/YourName/Projects/虚幻引擎-mcp/ue-mcp-server/dist/index.js"],
+        "env": {
+          "MCP_AUTOMATION_HOST": "127.0.0.1",
+          "MCP_AUTOMATION_PORT": "8091"
+        }
+      }
+    }
+  }
+}

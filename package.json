@@ -1,0 +1,29 @@
+{
+  "name": "ue-mcp-bridge",
+  "version": "1.0.0",
+  "description": "UE Editor AI Automation System - MCP Bridge for Unreal Engine 5",
+  "private": true,
+  "workspaces": [
+    "ue-mcp-server"
+  ],
+  "scripts": {
+    "build": "cd ue-mcp-server && npm run build",
+    "dev": "cd ue-mcp-server && npm run dev",
+    "clean": "cd ue-mcp-server && npm run clean"
+  },
+  "keywords": [
+    "unreal-engine",
+    "ue5",
+    "mcp",
+    "ai",
+    "automation",
+    "blueprint",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}

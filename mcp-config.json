@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ue-mcp-bridge": {
+      "command": "node",
+      "args": [
+        "d:/Project/TestProject/ue-mcp-bridge-main/ue-mcp-server/dist/index.js"
+      ],
+      "env": {
+        "MCP_AUTOMATION_HOST": "127.0.0.1",
+        "MCP_AUTOMATION_PORT": "8091"
+      }
+    }
+  }
+}
