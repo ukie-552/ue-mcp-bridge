@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { BaseTool } from '../../core/BaseTool.js';
 import type { OperationContext, OperationResult } from '../../types/index.js';
 import { ueBridge } from '../../bridge/index.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 const GetAvailableComponentTypesSchema = z.object({
   category: z.string().optional().describe('Filter by category (Rendering, Lights, Camera, Physics, Audio, Movement, AI, Effects, Utility)'),
@@ -246,6 +248,154 @@ export class GetDetailsPanelPropertiesTool extends BaseTool {
   }
 }
 
+const TakeScreenshotSchema = z.object({
+  output_path: z.string().optional().describe('Path to save the screenshot (default: Project/Screenshots/)'),
+  width: z.number().optional().default(1920).describe('Screenshot width'),
+  height: z.number().optional().default(1080).describe('Screenshot height'),
+  show_ui: z.boolean().optional().default(false).describe('Show editor UI in screenshot'),
+});
+
+export class TakeScreenshotTool extends BaseTool {
+  readonly name = 'take_screenshot';
+  readonly description = 'Take a fullscreen screenshot of the UE editor viewport';
+  readonly inputSchema = TakeScreenshotSchema;
+
+  async execute(params: unknown, _context: OperationContext): Promise<OperationResult<unknown>> {
+    try {
+      const validated = this.validateInput(params) as z.infer<typeof TakeScreenshotSchema>;
+      
+      const result = await ueBridge.executeCommand({
+        command: 'take_screenshot',
+        params: validated,
+        expectsResult: true,
+      });
+
+      if (!result.success) {
+        return this.createErrorResult('SCREENSHOT_FAILED', result.error ?? 'Failed to take screenshot');
+      }
+
+      return this.createSuccessResult(result.result);
+    } catch (error) {
+      return this.createErrorResult(
+        'VALIDATION_ERROR',
+        error instanceof Error ? error.message : 'Unknown validation error'
+      );
+    }
+  }
+}
+
+const ALLOWED_SCREENSHOT_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp', '.exr', '.hdr'];
+const SCREENSHOT_DIR_NAME = 'Screenshots';
+
+function validateScreenshotPath(filePath: string): { valid: boolean; error?: string; resolvedPath?: string } {
+  const absolutePath = path.resolve(filePath);
+  const normalizedPath = path.normalize(absolutePath);
+  
+  const ext = path.extname(normalizedPath).toLowerCase();
+  if (!ALLOWED_SCREENSHOT_EXTENSIONS.includes(ext)) {
+    return { 
+      valid: false, 
+      error: `Invalid file extension. Allowed extensions: ${ALLOWED_SCREENSHOT_EXTENSIONS.join(', ')}` 
+    };
+  }
+  
+  const pathSegments = normalizedPath.split(path.sep);
+  const screenshotsIndex = pathSegments.lastIndexOf(SCREENSHOT_DIR_NAME);
+  
+  if (screenshotsIndex === -1) {
+    return { 
+      valid: false, 
+      error: `File must be in a '${SCREENSHOT_DIR_NAME}' directory` 
+    };
+  }
+  
+  const screenshotDir = pathSegments.slice(0, screenshotsIndex + 1).join(path.sep);
+  const relativePath = path.relative(screenshotDir, normalizedPath);
+  
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    return { 
+      valid: false, 
+      error: 'Path traversal detected. File must be within the Screenshots directory' 
+    };
+  }
+  
+  return { valid: true, resolvedPath: normalizedPath };
+}
+
+const DeleteScreenshotSchema = z.object({
+  file_path: z.string().describe('Full path to the screenshot file to delete (must be in a Screenshots directory)'),
+});
+
+export class DeleteScreenshotTool extends BaseTool {
+  readonly name = 'delete_screenshot';
+  readonly description = 'Delete a screenshot file to save space';
+  readonly inputSchema = DeleteScreenshotSchema;
+
+  async execute(params: unknown, _context: OperationContext): Promise<OperationResult<unknown>> {
+    try {
+      const validated = this.validateInput(params) as z.infer<typeof DeleteScreenshotSchema>;
+      
+      const validation = validateScreenshotPath(validated.file_path);
+      if (!validation.valid) {
+        return this.createErrorResult('INVALID_PATH', validation.error ?? 'Invalid screenshot path');
+      }
+      
+      const absolutePath = validation.resolvedPath!;
+      
+      try {
+        await fs.access(absolutePath);
+      } catch {
+        return this.createErrorResult('FILE_NOT_FOUND', `Screenshot file not found: ${absolutePath}`);
+      }
+
+      await fs.unlink(absolutePath);
+
+      return this.createSuccessResult({
+        deleted: true,
+        file_path: absolutePath,
+      });
+    } catch (error) {
+      return this.createErrorResult(
+        'DELETE_FAILED',
+        error instanceof Error ? error.message : 'Failed to delete screenshot'
+      );
+    }
+  }
+}
+
+const GetEngineLogsSchema = z.object({
+  max_count: z.number().optional().default(100).describe('Maximum number of logs to retrieve (1-1000)'),
+});
+
+export class GetEngineLogsTool extends BaseTool {
+  readonly name = 'get_engine_logs';
+  readonly description = 'Get recent output logs from the Unreal Engine editor';
+  readonly inputSchema = GetEngineLogsSchema;
+
+  async execute(params: unknown, _context: OperationContext): Promise<OperationResult<unknown>> {
+    try {
+      const validated = this.validateInput(params) as z.infer<typeof GetEngineLogsSchema>;
+      
+      const result = await ueBridge.executeCommand({
+        command: 'get_engine_logs',
+        params: validated,
+        expectsResult: true,
+      });
+
+      if (!result.success) {
+        return this.createErrorResult('GET_LOGS_FAILED', result.error ?? 'Failed to get engine logs');
+      }
+
+      return this.createSuccessResult(result.result);
+    } catch (error) {
+      return this.createErrorResult(
+        'VALIDATION_ERROR',
+        error instanceof Error ? error.message : 'Unknown validation error'
+      );
+    }
+  }
+}
+
 export const editorTools: BaseTool<unknown>[] = [
   new GetAvailableComponentTypesTool(),
   new RemoveComponentTool(),
@@ -254,4 +404,7 @@ export const editorTools: BaseTool<unknown>[] = [
   new GetActorComponentsTool(),
   new EditorUndoRedoTool(),
   new GetDetailsPanelPropertiesTool(),
+  new TakeScreenshotTool(),
+  new DeleteScreenshotTool(),
+  new GetEngineLogsTool(),
 ];

@@ -1,4 +1,5 @@
 #include "Core/McpServer.h"
+#include "Core/LogCapture.h"
 #include "WebSocket/McpWebSocketServer.h"
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
@@ -16,6 +17,8 @@ void FMcpServer::Initialize()
     {
         return;
     }
+
+    FLogCapture::Get().StartCapture();
 
     WebSocketServer = MakeShareable(new FMcpWebSocketServer());
     if (WebSocketServer->Start(Host, Port))
@@ -35,6 +38,8 @@ void FMcpServer::Shutdown()
     {
         return;
     }
+
+    FLogCapture::Get().StopCapture();
 
     if (WebSocketServer.IsValid())
     {
