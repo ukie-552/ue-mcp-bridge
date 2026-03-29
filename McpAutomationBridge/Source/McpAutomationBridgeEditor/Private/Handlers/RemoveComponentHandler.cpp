@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "Components/ActorComponent.h"
 #include "Components/SceneComponent.h"
+#include "Editor.h"
+#include "EngineUtils.h"
 
 class FMcpRemoveComponentHandler : public FMcpCommandHandler
 {

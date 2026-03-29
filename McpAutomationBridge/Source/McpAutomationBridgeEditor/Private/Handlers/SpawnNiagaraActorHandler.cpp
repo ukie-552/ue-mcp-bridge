@@ -5,6 +5,8 @@
 #include "NiagaraActor.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Editor.h"
+#include "Engine/World.h"
 
 class FMcpSpawnNiagaraActorHandler : public FMcpCommandHandler
 {

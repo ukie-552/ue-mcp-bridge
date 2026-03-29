@@ -28,8 +28,7 @@ public:
 
         TArray<TSharedPtr<FJsonValue>> FunctionsArray;
 
-        TArray<UEdGraph*> FunctionGraphs;
-        Blueprint->GetFunctionGraphs(FunctionGraphs);
+        TArray<UEdGraph*> FunctionGraphs = Blueprint->FunctionGraphs;
 
         for (UEdGraph* Graph : FunctionGraphs)
         {
@@ -38,12 +37,6 @@ public:
             TSharedPtr<FJsonObject> FuncInfo = MakeShareable(new FJsonObject);
             FuncInfo->SetStringField(TEXT("function_name"), Graph->GetFName().ToString());
             FuncInfo->SetStringField(TEXT("graph_name"), Graph->GetName());
-
-            FString Description = Graph->GraphDescription;
-            if (!Description.IsEmpty())
-            {
-                FuncInfo->SetStringField(TEXT("description"), Description);
-            }
 
             bool bIsUserDefined = !Graph->GetName().StartsWith(TEXT("ExecuteUbergraph"));
             FuncInfo->SetBoolField(TEXT("is_user_defined"), bIsUserDefined);

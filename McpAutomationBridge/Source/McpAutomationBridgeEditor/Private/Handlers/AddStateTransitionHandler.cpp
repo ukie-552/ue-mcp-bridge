@@ -5,6 +5,7 @@
 #include "AnimGraphNode_StateResult.h"
 #include "AnimGraphNode_TransitionResult.h"
 #include "AnimationStateMachineSchema.h"
+#include "AnimationStateMachineGraph.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphNode.h"
@@ -128,7 +129,7 @@ private:
                 {
                     if (SMNode->GetStateMachineName() == StateMachineName)
                     {
-                        return Cast<UEdGraph>(SMNode->EditorStateMachineGraph);
+                        return SMNode->EditorStateMachineGraph.Get();
                     }
                 }
             }

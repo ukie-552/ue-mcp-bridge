@@ -8,6 +8,7 @@
 #include "PropertyEditorModule.h"
 #include "IDetailsView.h"
 #include "Modules/ModuleManager.h"
+#include "EngineUtils.h"
 
 class FMcpGetDetailsPanelPropertiesHandler : public FMcpCommandHandler
 {
@@ -172,7 +173,7 @@ private:
             }
             else
             {
-                return FString::Printf(TEXT("%lld"), NumericProp->GetIntPropertyValue(ValuePtr));
+                return FString::Printf(TEXT("%lld"), NumericProp->GetSignedIntPropertyValue(ValuePtr));
             }
         }
         else if (FBoolProperty* BoolProp = CastField<FBoolProperty>(Property))
@@ -189,7 +190,7 @@ private:
         }
         else if (FEnumProperty* EnumProp = CastField<FEnumProperty>(Property))
         {
-            return EnumProp->GetEnum()->GetNameStringByValue(EnumProp->GetUnderlyingProperty()->GetIntPropertyValue(ValuePtr));
+            return EnumProp->GetEnum()->GetNameStringByValue(EnumProp->GetUnderlyingProperty()->GetSignedIntPropertyValue(ValuePtr));
         }
         else if (FStructProperty* StructProp = CastField<FStructProperty>(Property))
         {

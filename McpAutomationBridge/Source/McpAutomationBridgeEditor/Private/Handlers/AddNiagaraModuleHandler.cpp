@@ -49,9 +49,10 @@ public:
 
         for (const FNiagaraEmitterHandle& Handle : NiagaraSystem->GetEmitterHandles())
         {
-            if (Handle.GetUniqueEmitterName() == EmitterName || Handle.GetName().ToString() == EmitterName)
+            FVersionedNiagaraEmitter VersionedEmitter = Handle.GetInstance();
+            if (VersionedEmitter.Emitter && (VersionedEmitter.Emitter->GetUniqueEmitterName() == EmitterName || Handle.GetName().ToString() == EmitterName))
             {
-                TargetEmitter = Handle.GetInstance();
+                TargetEmitter = VersionedEmitter.Emitter;
                 break;
             }
         }

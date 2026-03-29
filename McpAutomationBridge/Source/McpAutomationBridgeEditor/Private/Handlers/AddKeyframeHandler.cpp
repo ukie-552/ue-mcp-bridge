@@ -9,10 +9,10 @@
 #include "Tracks/MovieSceneDoubleTrack.h"
 #include "Sections/MovieScene3DTransformSection.h"
 #include "Sections/MovieSceneFloatSection.h"
+#include "Sections/MovieSceneDoubleSection.h"
 #include "Channels/MovieSceneChannel.h"
 #include "Channels/MovieSceneFloatChannel.h"
 #include "Channels/MovieSceneDoubleChannel.h"
-#include "Channels/MovieSceneChannelData.h"
 
 class FMcpAddKeyframeHandler : public FMcpCommandHandler
 {
@@ -53,18 +53,21 @@ public:
             );
         }
 
-        UMovieScene* MovieScene = Sequence->GetMovieScene();
-        if (!MovieScene)
+        const UMovieScene* MovieSceneConst = Sequence->GetMovieScene();
+        if (!MovieSceneConst)
         {
             return FMcpCommandResult::Failure(TEXT("Movie scene not found"), TEXT("NO_MOVIE_SCENE"));
         }
 
+        UMovieScene* MovieScene = const_cast<UMovieScene*>(MovieSceneConst);
+
         FGuid BindingGuid;
         if (!BindingName.IsEmpty())
         {
-            for (const FMovieSceneBinding& Binding : MovieScene->GetBindings())
+            const TArrayView<const FMovieSceneBinding> Bindings = MovieScene->GetBindings();
+            for (const FMovieSceneBinding& Binding : Bindings)
             {
-                if (Binding.GetName() == BindingName)
+                if (Binding.GetObjectGuid().ToString() == BindingName)
                 {
                     BindingGuid = Binding.GetObjectGuid();
                     break;
@@ -121,7 +124,7 @@ private:
         UMovieScene3DTransformTrack* TransformTrack = MovieScene->FindTrack<UMovieScene3DTransformTrack>(BindingGuid);
         if (!TransformTrack)
         {
-            TransformTrack = MovieScene->AddTrack<UMovieScene3DTransformTrack>(BindingGuid);
+            TransformTrack = Cast<UMovieScene3DTransformTrack>(MovieScene->AddTrack(UMovieScene3DTransformTrack::StaticClass(), BindingGuid));
         }
 
         if (!TransformTrack)
@@ -168,11 +171,11 @@ private:
         else if (Channel == TEXT("ScaleY")) ChannelIndex = 7;
         else if (Channel == TEXT("ScaleZ")) ChannelIndex = 8;
 
-        FMovieSceneDoubleChannel* DoubleChannel = TransformSection->GetChannel(ChannelIndex);
+        FMovieSceneChannelProxy& ChannelProxy = TransformSection->GetChannelProxy();
+        FMovieSceneDoubleChannel* DoubleChannel = ChannelProxy.GetChannel<FMovieSceneDoubleChannel>(ChannelIndex);
         if (DoubleChannel)
         {
-            FMovieSceneChannelValueHelper<double> ValueHelper(*DoubleChannel, FrameNumber);
-            ValueHelper = Value;
+            AddKeyToChannel(DoubleChannel, FrameNumber, Value, EMovieSceneKeyInterpolation::Auto);
         }
 
         return true;
@@ -194,12 +197,12 @@ private:
             FloatTrack = MovieScene->FindTrack<UMovieSceneFloatTrack>(BindingGuid);
             if (!FloatTrack)
             {
-                FloatTrack = MovieScene->AddTrack<UMovieSceneFloatTrack>(BindingGuid);
+                FloatTrack = Cast<UMovieSceneFloatTrack>(MovieScene->AddTrack(UMovieSceneFloatTrack::StaticClass(), BindingGuid));
             }
         }
         else
         {
-            FloatTrack = MovieScene->AddMasterTrack<UMovieSceneFloatTrack>();
+            FloatTrack = Cast<UMovieSceneFloatTrack>(MovieScene->AddTrack(UMovieSceneFloatTrack::StaticClass()));
         }
 
         if (!FloatTrack)
@@ -228,12 +231,8 @@ private:
 
         FloatSection->SetRange(TRange<FFrameNumber>::All());
 
-        FMovieSceneFloatChannel* FloatChannel = FloatSection->GetChannel(0);
-        if (FloatChannel)
-        {
-            FMovieSceneChannelValueHelper<float> ValueHelper(*FloatChannel, FrameNumber);
-            ValueHelper = static_cast<float>(Value);
-        }
+        FMovieSceneFloatChannel& FloatChannel = FloatSection->GetChannel();
+        AddKeyToChannel(&FloatChannel, FrameNumber, static_cast<float>(Value), EMovieSceneKeyInterpolation::Auto);
 
         return true;
     }
@@ -254,12 +253,12 @@ private:
             DoubleTrack = MovieScene->FindTrack<UMovieSceneDoubleTrack>(BindingGuid);
             if (!DoubleTrack)
             {
-                DoubleTrack = MovieScene->AddTrack<UMovieSceneDoubleTrack>(BindingGuid);
+                DoubleTrack = Cast<UMovieSceneDoubleTrack>(MovieScene->AddTrack(UMovieSceneDoubleTrack::StaticClass(), BindingGuid));
             }
         }
         else
         {
-            DoubleTrack = MovieScene->AddMasterTrack<UMovieSceneDoubleTrack>();
+            DoubleTrack = Cast<UMovieSceneDoubleTrack>(MovieScene->AddTrack(UMovieSceneDoubleTrack::StaticClass()));
         }
 
         if (!DoubleTrack)
@@ -288,12 +287,8 @@ private:
 
         DoubleSection->SetRange(TRange<FFrameNumber>::All());
 
-        FMovieSceneDoubleChannel* DoubleChannel = DoubleSection->GetChannel();
-        if (DoubleChannel)
-        {
-            FMovieSceneChannelValueHelper<double> ValueHelper(*DoubleChannel, FrameNumber);
-            ValueHelper = Value;
-        }
+        FMovieSceneDoubleChannel& DoubleChannel = DoubleSection->GetChannel();
+        AddKeyToChannel(&DoubleChannel, FrameNumber, Value, EMovieSceneKeyInterpolation::Auto);
 
         return true;
     }

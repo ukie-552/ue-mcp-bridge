@@ -3,6 +3,7 @@
 #include "Animation/AnimBlueprint.h"
 #include "AnimGraphNode_StateMachine.h"
 #include "AnimGraphNode_StateResult.h"
+#include "AnimationStateMachineGraph.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphNode.h"
@@ -63,7 +64,7 @@ public:
                     SMInfo->SetNumberField(TEXT("pos_x"), SMNode->NodePosX);
                     SMInfo->SetNumberField(TEXT("pos_y"), SMNode->NodePosY);
 
-                    UEdGraph* SMGraph = Cast<UEdGraph>(SMNode->EditorStateMachineGraph);
+                    UEdGraph* SMGraph = SMNode->EditorStateMachineGraph.Get();
                     if (SMGraph)
                     {
                         TArray<TSharedPtr<FJsonValue>> StatesArray;

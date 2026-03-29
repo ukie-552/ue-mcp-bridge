@@ -8,6 +8,7 @@
 #include "AnimGraphNode_Base.h"
 #include "AnimGraphNode_SequencePlayer.h"
 #include "AnimGraphNode_BlendSpacePlayer.h"
+#include "AnimationStateMachineGraph.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphNode.h"
@@ -114,30 +115,32 @@ private:
             return nullptr;
         }
 
-        UEdGraph* AnimGraph = AnimBP->GetAnimGraph();
-        if (!AnimGraph)
+        for (UEdGraph* Graph : AnimBP->UbergraphPages)
         {
-            return nullptr;
-        }
-
-        for (UEdGraphNode* Node : AnimGraph->Nodes)
-        {
-            if (UAnimGraphNode_StateMachine* SMNode = Cast<UAnimGraphNode_StateMachine>(Node))
+            if (!Graph)
             {
-                if (SMNode->StateMachineName.ToString() == StateMachineName)
+                continue;
+            }
+
+            for (UEdGraphNode* Node : Graph->Nodes)
+            {
+                if (UAnimGraphNode_StateMachine* SMNode = Cast<UAnimGraphNode_StateMachine>(Node))
                 {
-                    UEdGraph* SMGraph = SMNode->GetBoundGraph();
-                    if (SMGraph)
+                    if (SMNode->GetStateMachineName() == StateMachineName)
                     {
-                        for (UEdGraphNode* StateNode : SMGraph->Nodes)
+                        UAnimationStateMachineGraph* SMGraph = SMNode->EditorStateMachineGraph.Get();
+                        if (SMGraph)
                         {
-                            if (StateNode && StateNode->GetNodeTitle(ENodeTitleType::FullTitle).ToString() == StateName)
+                            for (UEdGraphNode* StateNode : SMGraph->Nodes)
                             {
-                                for (UEdGraph* InnerGraph : AnimBP->UbergraphPages)
+                                if (StateNode && StateNode->GetNodeTitle(ENodeTitleType::FullTitle).ToString() == StateName)
                                 {
-                                    if (InnerGraph && InnerGraph->GetName().Contains(StateName))
+                                    for (UEdGraph* InnerGraph : AnimBP->UbergraphPages)
                                     {
-                                        return InnerGraph;
+                                        if (InnerGraph && InnerGraph->GetName().Contains(StateName))
+                                        {
+                                            return InnerGraph;
+                                        }
                                     }
                                 }
                             }
@@ -165,10 +168,9 @@ private:
             SeqNode->SetFlags(RF_Transactional);
             Graph->AddNode(SeqNode, false, false);
 
-            SeqNode->Node = UAnimGraphNode_SequencePlayer::FNode();
-            SeqNode->Node.Sequence = AnimSequence;
-            SeqNode->Node.PlayRate = static_cast<float>(PlayRate);
-            SeqNode->Node.bLoop = bLoop;
+            SeqNode->Node.SetSequence(AnimSequence);
+            SeqNode->Node.SetPlayRate(static_cast<float>(PlayRate));
+            SeqNode->Node.SetLoopAnimation(bLoop);
 
             NewNode = SeqNode;
         }
@@ -178,9 +180,9 @@ private:
             BSNode->SetFlags(RF_Transactional);
             Graph->AddNode(BSNode, false, false);
 
-            BSNode->Node.BlendSpace = BlendSpace;
-            BSNode->Node.PlayRate = static_cast<float>(PlayRate);
-            BSNode->Node.bLoop = bLoop;
+            BSNode->Node.SetBlendSpace(BlendSpace);
+            BSNode->Node.SetPlayRate(static_cast<float>(PlayRate));
+            BSNode->Node.SetLoop(bLoop);
 
             NewNode = BSNode;
         }

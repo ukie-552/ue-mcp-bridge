@@ -35,10 +35,10 @@ bool FMcpWebSocketServer::Start(const FString& InHost, int32 InPort)
     McpRouteHandle = HttpRouter->BindRoute(
         McpPath,
         EHttpServerRequestVerbs::VERB_POST,
-        FHttpRequestHandler::CreateLambda([this](const TSharedPtr<FHttpServerRequest>& Request, const FHttpResultCallback& OnComplete)
+        FHttpRequestHandler::CreateLambda([this](const FHttpServerRequest& Request, const FHttpResultCallback& OnComplete)
         {
-            TSharedPtr<FHttpServerResponse> Response = HandleMcpRequest(*Request);
-            OnComplete(Response);
+            TUniquePtr<FHttpServerResponse> Response = HandleMcpRequest(Request);
+            OnComplete(MoveTemp(Response));
             return true;
         })
     );
@@ -79,7 +79,7 @@ void FMcpWebSocketServer::Stop()
     UE_LOG(LogTemp, Log, TEXT("MCP HTTP server stopped"));
 }
 
-TSharedPtr<FHttpServerResponse> FMcpWebSocketServer::HandleMcpRequest(const FHttpServerRequest& Request)
+TUniquePtr<FHttpServerResponse> FMcpWebSocketServer::HandleMcpRequest(const FHttpServerRequest& Request)
 {
     FString RequestBody;
     const TArray<uint8>& BodyBytes = Request.Body;
@@ -88,8 +88,7 @@ TSharedPtr<FHttpServerResponse> FMcpWebSocketServer::HandleMcpRequest(const FHtt
     FString Response;
     FMcpServer::Get().ProcessCommand(RequestBody, Response);
     
-    TSharedPtr<FHttpServerResponse> HttpResponse = FHttpServerResponse::Create(Response, FHttpServerConstants::EHttpServerContentType::TextHtml);
-    HttpResponse->Headers.Add(TEXT("Content-Type"), TArray<FString>{TEXT("application/json")});
+    TUniquePtr<FHttpServerResponse> HttpResponse = FHttpServerResponse::Create(Response, TEXT("application/json"));
     HttpResponse->Headers.Add(TEXT("Access-Control-Allow-Origin"), TArray<FString>{TEXT("*")});
     HttpResponse->Headers.Add(TEXT("Access-Control-Allow-Methods"), TArray<FString>{TEXT("POST, OPTIONS")});
     HttpResponse->Headers.Add(TEXT("Access-Control-Allow-Headers"), TArray<FString>{TEXT("Content-Type")});

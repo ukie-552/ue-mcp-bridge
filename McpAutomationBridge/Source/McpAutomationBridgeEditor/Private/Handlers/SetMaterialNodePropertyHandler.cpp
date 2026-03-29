@@ -13,6 +13,8 @@
 #include "Materials/MaterialExpressionPanner.h"
 #include "Materials/MaterialExpressionComponentMask.h"
 #include "UObject/PropertyPortFlags.h"
+#include "Engine/Texture.h"
+#include "Engine/EngineTypes.h"
 
 class FMcpSetMaterialNodePropertyHandler : public FMcpCommandHandler
 {
@@ -184,11 +186,11 @@ private:
                 {
                     if (Source == TEXT("Shared") || Source == TEXT("SharedWrap"))
                     {
-                        TexExpr->SamplerSource = ETextureSamplerSource::Shared;
+                        TexExpr->SamplerSource = SSM_Wrap_WorldGroupSettings;
                     }
                     else
                     {
-                        TexExpr->SamplerSource = ETextureSamplerSource::FromTextureAsset;
+                        TexExpr->SamplerSource = SSM_FromTextureAsset;
                     }
                     return true;
                 }

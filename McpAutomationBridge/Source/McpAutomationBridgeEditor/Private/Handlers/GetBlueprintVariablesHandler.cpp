@@ -32,10 +32,10 @@ public:
             TSharedPtr<FJsonObject> VarInfo = MakeShareable(new FJsonObject);
             VarInfo->SetStringField(TEXT("variable_name"), Var.VarName.ToString());
             VarInfo->SetStringField(TEXT("variable_type"), GetPinTypeString(Var.VarType.PinCategory));
-            VarInfo->SetBoolField(TEXT("is_array"), Var.VarType.ContainerType == EPinsContainerType::Array);
+            VarInfo->SetBoolField(TEXT("is_array"), Var.VarType.ContainerType == EPinContainerType::Array);
             VarInfo->SetStringField(TEXT("default_value"), Var.DefaultValue);
 
-            VarInfo->SetBoolField(TEXT("is_exposed"), (Var.PropertyFlags & CPF_ExposeToSpawn) != 0);
+            VarInfo->SetBoolField(TEXT("is_exposed"), (Var.PropertyFlags & CPF_ExposeOnSpawn) != 0);
             VarInfo->SetBoolField(TEXT("is_instance_editable"), (Var.PropertyFlags & CPF_Edit) != 0);
             VarInfo->SetBoolField(TEXT("is_blueprint_readonly"), (Var.PropertyFlags & CPF_BlueprintReadOnly) != 0);
 
@@ -45,7 +45,11 @@ public:
                 VarInfo->SetStringField(TEXT("category"), Category);
             }
 
-            FString Tooltip = Var.ToolTip.ToString();
+            FString Tooltip;
+            if (Var.HasMetaData(TEXT("Tooltip")))
+            {
+                Tooltip = Var.GetMetaData(TEXT("Tooltip"));
+            }
             if (!Tooltip.IsEmpty())
             {
                 VarInfo->SetStringField(TEXT("tooltip"), Tooltip);

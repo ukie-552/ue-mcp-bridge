@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Editor.h"
+#include "EngineUtils.h"
 
 class FMcpScaleActorHandler : public FMcpCommandHandler
 {

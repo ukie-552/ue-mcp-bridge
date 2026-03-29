@@ -3,6 +3,8 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "EditorLevelLibrary.h"
+#include "Editor.h"
+#include "EngineUtils.h"
 
 class FMcpDeleteActorHandler : public FMcpCommandHandler
 {

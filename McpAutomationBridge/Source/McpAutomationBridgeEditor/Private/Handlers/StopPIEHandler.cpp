@@ -1,7 +1,6 @@
 #include "CoreMinimal.h"
 #include "McpCommand.h"
 #include "Editor.h"
-#include "PlayLevel.h"
 
 class FMcpStopPIEHandler : public FMcpCommandHandler
 {

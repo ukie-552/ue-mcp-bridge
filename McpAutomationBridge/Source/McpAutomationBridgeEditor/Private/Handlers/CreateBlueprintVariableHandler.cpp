@@ -114,22 +114,22 @@ private:
         else if (TypeString == TEXT("vector") || TypeString == TEXT("Vector"))
         {
             PinType.PinCategory = UEdGraphSchema_K2::PC_Struct;
-            PinType.PinSubCategoryObject = StaticStruct<FVector>();
+            PinType.PinSubCategoryObject = TBaseStructure<FVector>::Get();
         }
         else if (TypeString == TEXT("rotator") || TypeString == TEXT("Rotator"))
         {
             PinType.PinCategory = UEdGraphSchema_K2::PC_Struct;
-            PinType.PinSubCategoryObject = StaticStruct<FRotator>();
+            PinType.PinSubCategoryObject = TBaseStructure<FRotator>::Get();
         }
         else if (TypeString == TEXT("transform") || TypeString == TEXT("Transform"))
         {
             PinType.PinCategory = UEdGraphSchema_K2::PC_Struct;
-            PinType.PinSubCategoryObject = StaticStruct<FTransform>();
+            PinType.PinSubCategoryObject = TBaseStructure<FTransform>::Get();
         }
         else if (TypeString == TEXT("color") || TypeString == TEXT("LinearColor"))
         {
             PinType.PinCategory = UEdGraphSchema_K2::PC_Struct;
-            PinType.PinSubCategoryObject = StaticStruct<FLinearColor>();
+            PinType.PinSubCategoryObject = TBaseStructure<FLinearColor>::Get();
         }
         else if (TypeString == TEXT("object") || TypeString == TEXT("Object"))
         {

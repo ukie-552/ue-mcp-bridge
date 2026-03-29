@@ -1,4 +1,5 @@
 #include "Core/LogCapture.h"
+#include "Misc/OutputDeviceRedirector.h"
 
 FLogCapture& FLogCapture::Get()
 {
@@ -55,12 +56,11 @@ void FLogCapture::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const
     Entry.Verbosity = Verbosity;
     Entry.Message = V;
 
-    LogQueue.Enqueue(Entry);
+    LogArray.Add(Entry);
 
-    while (LogQueue.Count() > MaxLogHistory)
+    while (LogArray.Num() > MaxLogHistory)
     {
-        FLogEntry OldEntry;
-        LogQueue.Dequeue(OldEntry);
+        LogArray.RemoveAt(0);
     }
 
     OnLogCaptured.Broadcast(Entry);
@@ -72,32 +72,15 @@ void FLogCapture::GetRecentLogs(int32 MaxCount, TArray<FLogEntry>& OutLogs)
 
     OutLogs.Empty();
 
-    TArray<FLogEntry> TempLogs;
-    FLogEntry Entry;
-    
-    while (LogQueue.Dequeue(Entry))
+    int32 StartIndex = FMath::Max(0, LogArray.Num() - MaxCount);
+    for (int32 i = StartIndex; i < LogArray.Num(); ++i)
     {
-        TempLogs.Add(Entry);
-    }
-
-    for (const FLogEntry& E : TempLogs)
-    {
-        LogQueue.Enqueue(E);
-    }
-
-    int32 StartIndex = FMath::Max(0, TempLogs.Num() - MaxCount);
-    for (int32 i = StartIndex; i < TempLogs.Num(); ++i)
-    {
-        OutLogs.Add(TempLogs[i]);
+        OutLogs.Add(LogArray[i]);
     }
 }
 
 void FLogCapture::ClearLogs()
 {
     FScopeLock Lock(&LogCriticalSection);
-
-    FLogEntry Entry;
-    while (LogQueue.Dequeue(Entry))
-    {
-    }
+    LogArray.Empty();
 }

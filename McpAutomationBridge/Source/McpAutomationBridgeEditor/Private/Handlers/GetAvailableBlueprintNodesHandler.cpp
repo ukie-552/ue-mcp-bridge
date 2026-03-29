@@ -36,7 +36,7 @@ public:
         {
             for (const TObjectPtr<UBlueprintNodeSpawner>& Spawner : Pair.Value)
             {
-                if (!Spawner.IsValid())
+                if (!Spawner.Get())
                 {
                     continue;
                 }

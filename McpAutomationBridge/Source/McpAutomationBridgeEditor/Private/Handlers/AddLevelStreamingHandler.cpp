@@ -4,6 +4,7 @@
 #include "Engine/LevelStreaming.h"
 #include "EditorLevelLibrary.h"
 #include "LevelEditor.h"
+#include "EditorLevelUtils.h"
 
 class FMcpAddLevelStreamingHandler : public FMcpCommandHandler
 {
@@ -41,13 +42,9 @@ public:
             PackageName = FString::Printf(TEXT("/Game/Maps/%s"), *PackageName);
         }
 
-        ULevelStreaming* StreamingLevel = nullptr;
+        ULevelStreaming* StreamingLevel = EditorLevelUtils::CreateNewStreamingLevelForWorld(*World, ULevelStreaming::StaticClass(), TEXT(""), false);
 
-        if (StreamingMethod == TEXT("AlwaysLoaded"))
-        {
-            StreamingLevel = GEditor->GetEditorWorldContext().AddStreamingLevel(World, *PackageName, FVector::ZeroVector, FRotator::ZeroRotator);
-        }
-        else
+        if (!StreamingLevel)
         {
             StreamingLevel = NewObject<ULevelStreaming>(World);
             if (StreamingLevel)
@@ -58,6 +55,12 @@ public:
                 
                 World->AddStreamingLevel(StreamingLevel);
             }
+        }
+        else
+        {
+            StreamingLevel->SetWorldAssetByPackageName(*PackageName);
+            StreamingLevel->SetShouldBeLoaded(true);
+            StreamingLevel->SetShouldBeVisible(StreamingMethod == TEXT("Visible") || StreamingMethod == TEXT("AlwaysLoaded"));
         }
 
         if (!StreamingLevel)

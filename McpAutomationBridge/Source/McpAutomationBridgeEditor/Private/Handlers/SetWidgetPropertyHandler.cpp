@@ -1,6 +1,7 @@
 #include "CoreMinimal.h"
 #include "McpCommand.h"
 #include "WidgetBlueprint.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/Widget.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"

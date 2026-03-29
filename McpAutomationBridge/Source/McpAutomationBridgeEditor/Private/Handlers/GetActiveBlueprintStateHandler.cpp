@@ -5,7 +5,9 @@
 #include "EdGraph/EdGraphNode.h"
 #include "EdGraph/EdGraphPin.h"
 #include "BlueprintEditor.h"
-#include "Kismet2/BlueprintEditorLibrary.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "Subsystems/AssetEditorSubsystem.h"
+#include "BlueprintEditorModule.h"
 
 class FMcpGetActiveBlueprintStateHandler : public FMcpCommandHandler
 {
@@ -17,6 +19,7 @@ public:
         UBlueprint* Blueprint = nullptr;
         FString BlueprintPath;
         bool bIsActiveBlueprint = false;
+        FBlueprintEditor* BlueprintEditor = nullptr;
         
         if (Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
         {
@@ -28,32 +31,43 @@ public:
                     TEXT("ASSET_NOT_FOUND")
                 );
             }
+            
+            IAssetEditorInstance* EditorInstance = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->FindEditorForAsset(Blueprint, false);
+            if (EditorInstance)
+            {
+                BlueprintEditor = static_cast<FBlueprintEditor*>(EditorInstance);
+            }
         }
         else
         {
-            FBlueprintEditor* BlueprintEditor = static_cast<FBlueprintEditor*>(GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->FindEditorForAssetOfClass(UBlueprint::StaticClass(), true));
+            TArray<IAssetEditorInstance*> OpenEditors = GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->GetAllOpenEditors();
+            for (IAssetEditorInstance* Editor : OpenEditors)
+            {
+                if (Editor->GetEditorName() == FName("BlueprintEditor"))
+                {
+                    BlueprintEditor = static_cast<FBlueprintEditor*>(Editor);
+                    if (BlueprintEditor)
+                    {
+                        Blueprint = BlueprintEditor->GetBlueprintObj();
+                        if (Blueprint)
+                        {
+                            bIsActiveBlueprint = true;
+                            break;
+                        }
+                    }
+                }
+            }
             
-            if (!BlueprintEditor)
+            if (!BlueprintEditor || !Blueprint)
             {
                 return FMcpCommandResult::Failure(TEXT("No blueprint editor is currently active, please specify blueprint_path"), TEXT("NO_ACTIVE_BLUEPRINT"));
             }
-
-            Blueprint = BlueprintEditor->GetBlueprintObj();
-            if (!Blueprint)
-            {
-                return FMcpCommandResult::Failure(TEXT("Failed to get active blueprint"), TEXT("BLUEPRINT_NOT_FOUND"));
-            }
-            bIsActiveBlueprint = true;
         }
 
         UEdGraph* CurrentGraph = nullptr;
-        if (bIsActiveBlueprint)
+        if (BlueprintEditor)
         {
-            FBlueprintEditor* BlueprintEditor = static_cast<FBlueprintEditor*>(GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->FindEditorForAssetOfClass(UBlueprint::StaticClass(), true));
-            if (BlueprintEditor)
-            {
-                CurrentGraph = BlueprintEditor->GetCurrentGraph();
-            }
+            CurrentGraph = BlueprintEditor->GetFocusedGraph();
         }
         
         TSharedPtr<FJsonObject> Result = MakeShareable(new FJsonObject);
@@ -134,15 +148,14 @@ public:
         Result->SetArrayField(TEXT("graphs"), GraphsArray);
 
         TArray<TSharedPtr<FJsonValue>> SelectedNodesArray;
-        if (bIsActiveBlueprint)
+        if (BlueprintEditor)
         {
-            FBlueprintEditor* BlueprintEditor = static_cast<FBlueprintEditor*>(GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->FindEditorForAssetOfClass(UBlueprint::StaticClass(), true));
-            if (BlueprintEditor)
+            FGraphPanelSelectionSet SelectedNodes = BlueprintEditor->GetSelectedNodes();
+            for (UObject* SelectedObject : SelectedNodes)
             {
-                TArray<FGuid> SelectedNodes = BlueprintEditor->GetSelectedNodes();
-                for (const FGuid& NodeGuid : SelectedNodes)
+                if (UEdGraphNode* SelectedNode = Cast<UEdGraphNode>(SelectedObject))
                 {
-                    SelectedNodesArray.Add(MakeShareable(new FJsonValueString(NodeGuid.ToString())));
+                    SelectedNodesArray.Add(MakeShareable(new FJsonValueString(SelectedNode->NodeGuid.ToString())));
                 }
             }
         }

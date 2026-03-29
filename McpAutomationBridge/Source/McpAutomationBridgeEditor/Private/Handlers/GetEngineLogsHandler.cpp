@@ -1,7 +1,7 @@
 #include "Core/LogCapture.h"
 #include "McpCommand.h"
 
-class FGetEngineLogsHandler : public FMcpCommandHandler
+class FMcpGetEngineLogsHandler : public FMcpCommandHandler
 {
 public:
     virtual FString GetCommandName() const override
@@ -26,12 +26,25 @@ public:
 
         for (const FLogEntry& Log : Logs)
         {
-            TSharedPtr<FJsonObject> LogObj = MakeShareable(new FJsonObject);
-            LogObj->SetStringField(TEXT("timestamp"), Log.Timestamp.ToString());
-            LogObj->SetStringField(TEXT("category"), Log.Category);
-            LogObj->SetStringField(TEXT("verbosity"), UEnum::GetValueAsString(Log.Verbosity));
-            LogObj->SetStringField(TEXT("message"), Log.Message);
-            LogArray.Add(MakeShareable(new FJsonValueObject(LogObj)));
+            TSharedPtr<FJsonObject> LogEntryObj = MakeShareable(new FJsonObject);
+            LogEntryObj->SetStringField(TEXT("timestamp"), Log.Timestamp.ToString());
+            LogEntryObj->SetStringField(TEXT("category"), Log.Category);
+            
+            FString VerbosityStr;
+            switch (Log.Verbosity)
+            {
+                case ELogVerbosity::Fatal: VerbosityStr = TEXT("Fatal"); break;
+                case ELogVerbosity::Error: VerbosityStr = TEXT("Error"); break;
+                case ELogVerbosity::Warning: VerbosityStr = TEXT("Warning"); break;
+                case ELogVerbosity::Display: VerbosityStr = TEXT("Display"); break;
+                case ELogVerbosity::Log: VerbosityStr = TEXT("Log"); break;
+                case ELogVerbosity::Verbose: VerbosityStr = TEXT("Verbose"); break;
+                case ELogVerbosity::VeryVerbose: VerbosityStr = TEXT("VeryVerbose"); break;
+                default: VerbosityStr = TEXT("Unknown"); break;
+            }
+            LogEntryObj->SetStringField(TEXT("verbosity"), VerbosityStr);
+            LogEntryObj->SetStringField(TEXT("message"), Log.Message);
+            LogArray.Add(MakeShareable(new FJsonValueObject(LogEntryObj)));
         }
 
         Result->SetArrayField(TEXT("logs"), LogArray);
@@ -41,4 +54,4 @@ public:
     }
 };
 
-REGISTER_MCP_COMMAND(FGetEngineLogsHandler);
+REGISTER_MCP_COMMAND(FMcpGetEngineLogsHandler);

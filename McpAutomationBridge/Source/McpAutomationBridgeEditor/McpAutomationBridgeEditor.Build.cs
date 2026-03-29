@@ -41,6 +41,7 @@ public class McpAutomationBridgeEditor : ModuleRules
 			"UMGEditor",
 			"MaterialEditor",
 			"AnimGraph",
+			"AnimGraphRuntime",
 			"LevelSequence",
 			"MovieScene",
 			"MovieSceneTracks",

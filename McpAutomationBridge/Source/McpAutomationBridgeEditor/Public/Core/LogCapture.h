@@ -36,7 +36,7 @@ private:
     virtual void Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const FName& Category) override;
 
     bool bIsCapturing = false;
-    TQueue<FLogEntry> LogQueue;
+    TArray<FLogEntry> LogArray;
     FCriticalSection LogCriticalSection;
     int32 MaxLogHistory = 1000;
 };

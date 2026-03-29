@@ -50,7 +50,7 @@ public:
             PinInfo->SetStringField(TEXT("pin_name"), Pin->PinName.ToString());
             PinInfo->SetStringField(TEXT("pin_type"), GetPinTypeString(Pin->PinType.PinCategory));
             PinInfo->SetStringField(TEXT("direction"), GetDirectionString(Pin->Direction));
-            PinInfo->SetBoolField(TEXT("is_array"), Pin->PinType.ContainerType == EPinsContainerType::Array);
+            PinInfo->SetBoolField(TEXT("is_array"), Pin->PinType.ContainerType == EPinContainerType::Array);
             PinInfo->SetBoolField(TEXT("has_connection"), Pin->LinkedTo.Num() > 0);
             PinInfo->SetNumberField(TEXT("connection_count"), Pin->LinkedTo.Num());
 

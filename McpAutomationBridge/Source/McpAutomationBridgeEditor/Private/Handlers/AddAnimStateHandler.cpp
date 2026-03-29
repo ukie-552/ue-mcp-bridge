@@ -2,9 +2,11 @@
 #include "McpCommand.h"
 #include "Animation/AnimBlueprint.h"
 #include "AnimGraphNode_StateMachine.h"
+#include "AnimGraphNode_StateMachineBase.h"
 #include "AnimGraphNode_StateResult.h"
 #include "AnimGraphNode_Base.h"
 #include "AnimationStateMachineSchema.h"
+#include "AnimationStateMachineGraph.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphNode.h"
@@ -103,13 +105,22 @@ private:
             }
         }
 
-        for (UEdGraphNode* Node : AnimBP->GetAnimGraph()->Nodes)
+        for (UEdGraph* Graph : AnimBP->FunctionGraphs)
         {
-            if (UAnimGraphNode_StateMachine* SMNode = Cast<UAnimGraphNode_StateMachine>(Node))
+            if (!Graph) continue;
+
+            for (UEdGraphNode* Node : Graph->Nodes)
             {
-                if (SMNode->StateMachineName.ToString() == StateMachineName)
+                if (UAnimGraphNode_StateMachineBase* SMNode = Cast<UAnimGraphNode_StateMachineBase>(Node))
                 {
-                    return SMNode->GetBoundGraph();
+                    if (SMNode->GetStateMachineName() == StateMachineName)
+                    {
+                        UAnimationStateMachineGraph* StateMachineGraph = SMNode->EditorStateMachineGraph.Get();
+                        if (StateMachineGraph)
+                        {
+                            return Cast<UEdGraph>(StateMachineGraph);
+                        }
+                    }
                 }
             }
         }

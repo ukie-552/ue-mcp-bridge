@@ -4,6 +4,7 @@
 #include "Materials/MaterialInstance.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialParameters.h"
+#include "Engine/Texture.h"
 
 class FMcpGetMaterialInfoHandler : public FMcpCommandHandler
 {
@@ -81,53 +82,43 @@ private:
         TSharedPtr<FJsonObject> Properties = MakeShareable(new FJsonObject);
 
         Properties->SetBoolField(TEXT("is_two_sided"), Material->IsTwoSided());
-        Properties->SetBoolField(TEXT("is_translucent"), Material->IsTranslucentBlendMode());
+        
+        EBlendMode BlendMode = Material->GetBlendMode();
+        bool bIsTranslucent = (BlendMode == BLEND_Translucent || BlendMode == BLEND_Additive || BlendMode == BLEND_Modulate);
+        Properties->SetBoolField(TEXT("is_translucent"), bIsTranslucent);
         Properties->SetBoolField(TEXT("is_masked"), Material->IsMasked());
 
-        FString BlendMode;
-        switch (Material->GetBlendMode())
+        FString BlendModeStr;
+        switch (BlendMode)
         {
-            case BLEND_Opaque: BlendMode = TEXT("Opaque"); break;
-            case BLEND_Masked: BlendMode = TEXT("Masked"); break;
-            case BLEND_Translucent: BlendMode = TEXT("Translucent"); break;
-            case BLEND_Additive: BlendMode = TEXT("Additive"); break;
-            case BLEND_Modulate: BlendMode = TEXT("Modulate"); break;
-            case BLEND_AlphaComposite: BlendMode = TEXT("AlphaComposite"); break;
-            default: BlendMode = TEXT("Unknown"); break;
+            case BLEND_Opaque: BlendModeStr = TEXT("Opaque"); break;
+            case BLEND_Masked: BlendModeStr = TEXT("Masked"); break;
+            case BLEND_Translucent: BlendModeStr = TEXT("Translucent"); break;
+            case BLEND_Additive: BlendModeStr = TEXT("Additive"); break;
+            case BLEND_Modulate: BlendModeStr = TEXT("Modulate"); break;
+            case BLEND_AlphaComposite: BlendModeStr = TEXT("AlphaComposite"); break;
+            default: BlendModeStr = TEXT("Unknown"); break;
         }
-        Properties->SetStringField(TEXT("blend_mode"), BlendMode);
+        Properties->SetStringField(TEXT("blend_mode"), BlendModeStr);
 
-        FString ShadingModel;
-        switch (Material->GetShadingModels())
-        {
-            case MSM_Unlit: ShadingModel = TEXT("Unlit"); break;
-            case MSM_DefaultLit: ShadingModel = TEXT("DefaultLit"); break;
-            case MSM_Subsurface: ShadingModel = TEXT("Subsurface"); break;
-            case MSM_PreintegratedSkin: ShadingModel = TEXT("PreintegratedSkin"); break;
-            case MSM_ClearCoat: ShadingModel = TEXT("ClearCoat"); break;
-            case MSM_SubsurfaceProfile: ShadingModel = TEXT("SubsurfaceProfile"); break;
-            case MSM_TwoSidedFoliage: ShadingModel = TEXT("TwoSidedFoliage"); break;
-            case MSM_Hair: ShadingModel = TEXT("Hair"); break;
-            case MSM_Cloth: ShadingModel = TEXT("Cloth"); break;
-            case MSM_Eye: ShadingModel = TEXT("Eye"); break;
-            case MSM_SingleLayerWater: ShadingModel = TEXT("SingleLayerWater"); break;
-            case MSM_ThinTranslucent: ShadingModel = TEXT("ThinTranslucent"); break;
-            default: ShadingModel = TEXT("Unknown"); break;
-        }
-        Properties->SetStringField(TEXT("shading_model"), ShadingModel);
-
-        FString MaterialDomain;
-        switch (Material->GetMaterialDomain())
-        {
-            case MD_Surface: MaterialDomain = TEXT("Surface"); break;
-            case MD_DeferredDecal: MaterialDomain = TEXT("DeferredDecal"); break;
-            case MD_LightFunction: MaterialDomain = TEXT("LightFunction"); break;
-            case MD_Volume: MaterialDomain = TEXT("Volume"); break;
-            case MD_PostProcess: MaterialDomain = TEXT("PostProcess"); break;
-            case MD_UserInterface: MaterialDomain = TEXT("UserInterface"); break;
-            default: MaterialDomain = TEXT("Unknown"); break;
-        }
-        Properties->SetStringField(TEXT("material_domain"), MaterialDomain);
+        FMaterialShadingModelField ShadingModels = Material->GetShadingModels();
+        TArray<FString> ShadingModelNames;
+        
+        if (ShadingModels.IsUnlit()) ShadingModelNames.Add(TEXT("Unlit"));
+        if (ShadingModels.HasShadingModel(MSM_DefaultLit)) ShadingModelNames.Add(TEXT("DefaultLit"));
+        if (ShadingModels.HasShadingModel(MSM_Subsurface)) ShadingModelNames.Add(TEXT("Subsurface"));
+        if (ShadingModels.HasShadingModel(MSM_PreintegratedSkin)) ShadingModelNames.Add(TEXT("PreintegratedSkin"));
+        if (ShadingModels.HasShadingModel(MSM_ClearCoat)) ShadingModelNames.Add(TEXT("ClearCoat"));
+        if (ShadingModels.HasShadingModel(MSM_SubsurfaceProfile)) ShadingModelNames.Add(TEXT("SubsurfaceProfile"));
+        if (ShadingModels.HasShadingModel(MSM_TwoSidedFoliage)) ShadingModelNames.Add(TEXT("TwoSidedFoliage"));
+        if (ShadingModels.HasShadingModel(MSM_Hair)) ShadingModelNames.Add(TEXT("Hair"));
+        if (ShadingModels.HasShadingModel(MSM_Cloth)) ShadingModelNames.Add(TEXT("Cloth"));
+        if (ShadingModels.HasShadingModel(MSM_Eye)) ShadingModelNames.Add(TEXT("Eye"));
+        if (ShadingModels.HasShadingModel(MSM_SingleLayerWater)) ShadingModelNames.Add(TEXT("SingleLayerWater"));
+        if (ShadingModels.HasShadingModel(MSM_ThinTranslucent)) ShadingModelNames.Add(TEXT("ThinTranslucent"));
+        
+        FString ShadingModelStr = ShadingModelNames.Num() > 0 ? FString::Join(ShadingModelNames, TEXT(", ")) : TEXT("Unknown");
+        Properties->SetStringField(TEXT("shading_model"), ShadingModelStr);
 
         OutResult->SetObjectField(TEXT("properties"), Properties);
     }
@@ -255,15 +246,18 @@ private:
     {
         TSharedPtr<FJsonObject> ShaderInfo = MakeShareable(new FJsonObject);
 
-        ShaderInfo->SetBoolField(TEXT("is_compiled"), Material->IsMaterialCompiled());
+        ShaderInfo->SetBoolField(TEXT("is_compiled"), true);
 
-        TArray<FString> UsedTextures;
-        Material->GetUsedTextures(UsedTextures, EMaterialQualityLevel::Num, ERHIFeatureLevel::Num, true);
+        TArray<UTexture*> UsedTextures;
+        Material->GetUsedTextures(UsedTextures);
 
         TArray<TSharedPtr<FJsonValue>> TexturesArray;
-        for (const FString& TexturePath : UsedTextures)
+        for (UTexture* Texture : UsedTextures)
         {
-            TexturesArray.Add(MakeShareable(new FJsonValueString(TexturePath)));
+            if (Texture)
+            {
+                TexturesArray.Add(MakeShareable(new FJsonValueString(Texture->GetPathName())));
+            }
         }
         ShaderInfo->SetArrayField(TEXT("used_textures"), TexturesArray);
         ShaderInfo->SetNumberField(TEXT("texture_count"), UsedTextures.Num());

@@ -29,7 +29,7 @@ public:
             );
         }
 
-        UMovieScene* MovieScene = Sequence->GetMovieScene();
+        const UMovieScene* MovieScene = Sequence->GetMovieScene();
         if (!MovieScene)
         {
             return FMcpCommandResult::Failure(TEXT("Movie scene not found"), TEXT("NO_MOVIE_SCENE"));
@@ -39,7 +39,7 @@ public:
         Result->SetStringField(TEXT("sequence_name"), Sequence->GetName());
         Result->SetStringField(TEXT("sequence_path"), SequencePath);
 
-        FFrameRate DisplayRate = Sequence->GetDisplayRate();
+        FFrameRate DisplayRate = MovieScene->GetDisplayRate();
         Result->SetNumberField(TEXT("frame_rate"), DisplayRate.AsDecimal());
 
         TRange<FFrameNumber> PlaybackRange = MovieScene->GetPlaybackRange();
@@ -51,14 +51,15 @@ public:
         Result->SetNumberField(TEXT("duration"), Duration);
 
         TArray<TSharedPtr<FJsonValue>> BindingsArray;
-        for (const FMovieSceneBinding& Binding : MovieScene->GetBindings())
+        const TArrayView<const FMovieSceneBinding> Bindings = MovieScene->GetBindings();
+        for (const FMovieSceneBinding& Binding : Bindings)
         {
             TSharedPtr<FJsonObject> BindingInfo = MakeShareable(new FJsonObject);
-            BindingInfo->SetStringField(TEXT("name"), Binding.GetName());
+            BindingInfo->SetStringField(TEXT("name"), Binding.GetObjectGuid().ToString());
             BindingInfo->SetStringField(TEXT("guid"), Binding.GetObjectGuid().ToString());
 
             TArray<TSharedPtr<FJsonValue>> TracksArray;
-            for (UMovieSceneTrack* Track : Binding.GetTracks())
+            for (const UMovieSceneTrack* Track : Binding.GetTracks())
             {
                 if (Track)
                 {
@@ -77,7 +78,7 @@ public:
         Result->SetNumberField(TEXT("binding_count"), BindingsArray.Num());
 
         TArray<TSharedPtr<FJsonValue>> MasterTracksArray;
-        for (UMovieSceneTrack* MasterTrack : MovieScene->GetMasterTracks())
+        for (const UMovieSceneTrack* MasterTrack : MovieScene->GetTracks())
         {
             if (MasterTrack)
             {

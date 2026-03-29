@@ -3,6 +3,7 @@
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
 #include "Selection.h"
+#include "EngineUtils.h"
 
 class FMcpSelectActorHandler : public FMcpCommandHandler
 {

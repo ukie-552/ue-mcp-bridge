@@ -52,15 +52,14 @@ public:
         FNiagaraEmitterHandle EmitterHandle;
         if (EmitterTemplate)
         {
-            EmitterHandle = NiagaraSystem->AddEmitter(EmitterTemplate, EmitterName);
+            EmitterHandle = NiagaraSystem->AddEmitterHandle(*EmitterTemplate, *EmitterName, FGuid());
         }
         else
         {
             UNiagaraEmitter* NewEmitter = NewObject<UNiagaraEmitter>(NiagaraSystem, *EmitterName, RF_Public | RF_Transactional);
             if (NewEmitter)
             {
-                NewEmitter->SetEmitterName(*EmitterName);
-                EmitterHandle = NiagaraSystem->AddEmitter(NewEmitter, EmitterName);
+                EmitterHandle = NiagaraSystem->AddEmitterHandle(*NewEmitter, *EmitterName, FGuid());
             }
         }
 
@@ -69,8 +68,7 @@ public:
             return FMcpCommandResult::Failure(TEXT("Failed to add emitter to system"), TEXT("EMITTER_ADD_FAILED"));
         }
 
-        EmitterHandle.SetIsSolo(bIsSolo);
-        EmitterHandle.SetIsEnabled(bIsEnabled);
+        EmitterHandle.SetIsEnabled(bIsEnabled, *NiagaraSystem, true);
 
         NiagaraSystem->MarkPackageDirty();
 

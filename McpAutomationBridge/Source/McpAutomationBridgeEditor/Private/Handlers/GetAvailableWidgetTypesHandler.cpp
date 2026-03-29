@@ -35,7 +35,7 @@
 #include "Components/RetainerBox.h"
 #include "Components/SafeZone.h"
 #include "Components/ScaleBox.h"
-#include "AssetRegistry/AssetRegistryModule.h"
+#include "UObject/UObjectHash.h"
 
 class FMcpGetAvailableWidgetTypesHandler : public FMcpCommandHandler
 {
@@ -49,57 +49,67 @@ public:
 
         TArray<TSharedPtr<FJsonValue>> WidgetTypesArray;
 
-        TArray<TPair<FString, TArray<FString>>> WidgetCategories;
+        TMap<FString, TArray<FString>> WidgetCategories;
 
-        WidgetCategories.Add(TPair<FString, TArray<FString>>(TEXT("Basic"), {
-            TEXT("TextBlock"),
-            TEXT("Image"),
-            TEXT("Button"),
-            TEXT("CheckBox"),
-            TEXT("ProgressBar"),
-            TEXT("Slider"),
-            TEXT("SpinBox"),
-            TEXT("Border"),
-            TEXT("Spacer"),
-        }));
+        {
+            TArray<FString> BasicWidgets;
+            BasicWidgets.Add(TEXT("TextBlock"));
+            BasicWidgets.Add(TEXT("Image"));
+            BasicWidgets.Add(TEXT("Button"));
+            BasicWidgets.Add(TEXT("CheckBox"));
+            BasicWidgets.Add(TEXT("ProgressBar"));
+            BasicWidgets.Add(TEXT("Slider"));
+            BasicWidgets.Add(TEXT("SpinBox"));
+            BasicWidgets.Add(TEXT("Border"));
+            BasicWidgets.Add(TEXT("Spacer"));
+            WidgetCategories.Add(TEXT("Basic"), BasicWidgets);
+        }
 
-        WidgetCategories.Add(TPair<FString, TArray<FString>>(TEXT("Input"), {
-            TEXT("EditableText"),
-            TEXT("EditableTextBox"),
-            TEXT("MultiLineEditableText"),
-            TEXT("MultiLineEditableTextBox"),
-            TEXT("ComboBoxString"),
-            TEXT("NumericUpDown"),
-        }));
+        {
+            TArray<FString> InputWidgets;
+            InputWidgets.Add(TEXT("EditableText"));
+            InputWidgets.Add(TEXT("EditableTextBox"));
+            InputWidgets.Add(TEXT("MultiLineEditableText"));
+            InputWidgets.Add(TEXT("MultiLineEditableTextBox"));
+            InputWidgets.Add(TEXT("ComboBoxString"));
+            InputWidgets.Add(TEXT("NumericUpDown"));
+            WidgetCategories.Add(TEXT("Input"), InputWidgets);
+        }
 
-        WidgetCategories.Add(TPair<FString, TArray<FString>>(TEXT("Panels"), {
-            TEXT("CanvasPanel"),
-            TEXT("HorizontalBox"),
-            TEXT("VerticalBox"),
-            TEXT("GridPanel"),
-            TEXT("UniformGridPanel"),
-            TEXT("Overlay"),
-            TEXT("ScrollBox"),
-            TEXT("SizeBox"),
-            TEXT("ScaleBox"),
-            TEXT("WrapBox"),
-            TEXT("InvalidationBox"),
-            TEXT("RetainerBox"),
-            TEXT("SafeZone"),
-        }));
+        {
+            TArray<FString> PanelWidgets;
+            PanelWidgets.Add(TEXT("CanvasPanel"));
+            PanelWidgets.Add(TEXT("HorizontalBox"));
+            PanelWidgets.Add(TEXT("VerticalBox"));
+            PanelWidgets.Add(TEXT("GridPanel"));
+            PanelWidgets.Add(TEXT("UniformGridPanel"));
+            PanelWidgets.Add(TEXT("Overlay"));
+            PanelWidgets.Add(TEXT("ScrollBox"));
+            PanelWidgets.Add(TEXT("SizeBox"));
+            PanelWidgets.Add(TEXT("ScaleBox"));
+            PanelWidgets.Add(TEXT("WrapBox"));
+            PanelWidgets.Add(TEXT("InvalidationBox"));
+            PanelWidgets.Add(TEXT("RetainerBox"));
+            PanelWidgets.Add(TEXT("SafeZone"));
+            WidgetCategories.Add(TEXT("Panels"), PanelWidgets);
+        }
 
-        WidgetCategories.Add(TPair<FString, TArray<FString>>(TEXT("Lists"), {
-            TEXT("ListView"),
-            TEXT("TileView"),
-            TEXT("TreeView"),
-        }));
+        {
+            TArray<FString> ListWidgets;
+            ListWidgets.Add(TEXT("ListView"));
+            ListWidgets.Add(TEXT("TileView"));
+            ListWidgets.Add(TEXT("TreeView"));
+            WidgetCategories.Add(TEXT("Lists"), ListWidgets);
+        }
 
-        WidgetCategories.Add(TPair<FString, TArray<FString>>(TEXT("Advanced"), {
-            TEXT("RichTextBlock"),
-            TEXT("Throbber"),
-            TEXT("CircularThrobber"),
-            TEXT("ExpandableArea"),
-        }));
+        {
+            TArray<FString> AdvancedWidgets;
+            AdvancedWidgets.Add(TEXT("RichTextBlock"));
+            AdvancedWidgets.Add(TEXT("Throbber"));
+            AdvancedWidgets.Add(TEXT("CircularThrobber"));
+            AdvancedWidgets.Add(TEXT("ExpandableArea"));
+            WidgetCategories.Add(TEXT("Advanced"), AdvancedWidgets);
+        }
 
         for (const auto& CategoryPair : WidgetCategories)
         {
@@ -117,7 +127,7 @@ public:
         }
 
         TArray<UClass*> AllWidgetClasses;
-        GetDerivedClasses(UWidget::StaticClass(), AllWidgetClasses);
+        ::GetDerivedClasses(UWidget::StaticClass(), AllWidgetClasses, true);
 
         TSet<FString> AlreadyAddedTypes;
         for (const auto& JsonValue : WidgetTypesArray)
@@ -146,46 +156,6 @@ public:
         Result->SetNumberField(TEXT("count"), WidgetTypesArray.Num());
 
         return FMcpCommandResult::Success(Result);
-    }
-
-private:
-    void GetDerivedClasses(UClass* BaseClass, TArray<UClass*>& DerivedClasses)
-    {
-        if (!BaseClass)
-        {
-            return;
-        }
-
-        TArray<UClass*> AllClasses;
-        GetDerivedClassesRecursive(BaseClass, AllClasses);
-
-        for (UClass* Class : AllClasses)
-        {
-            if (Class && Class->IsChildOf(BaseClass) && !Class->HasAnyClassFlags(CLASS_Abstract))
-            {
-                DerivedClasses.AddUnique(Class);
-            }
-        }
-    }
-
-    void GetDerivedClassesRecursive(UClass* BaseClass, TArray<UClass*>& OutClasses)
-    {
-        if (!BaseClass)
-        {
-            return;
-        }
-
-        TArray<UClass*> Children;
-        BaseClass->GetChildren(Children);
-
-        for (UClass* Child : Children)
-        {
-            if (Child)
-            {
-                OutClasses.Add(Child);
-                GetDerivedClassesRecursive(Child, OutClasses);
-            }
-        }
     }
 };
 

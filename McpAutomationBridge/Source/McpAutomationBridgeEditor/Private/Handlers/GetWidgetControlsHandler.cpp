@@ -3,6 +3,7 @@
 #include "WidgetBlueprint.h"
 #include "Components/Widget.h"
 #include "Components/PanelWidget.h"
+#include "Blueprint/WidgetTree.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 class FMcpGetWidgetControlsHandler : public FMcpCommandHandler

@@ -4,6 +4,9 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Engine/Blueprint.h"
 #include "Blueprint/UserWidget.h"
+#include "Misc/FileHelper.h"
+#include "HAL/PlatformFileManager.h"
+#include "UObject/SavePackage.h"
 
 class FMcpCompileBlueprintHandler : public FMcpCommandHandler
 {
@@ -55,17 +58,7 @@ public:
         {
             TSharedPtr<FJsonObject> MsgJson = MakeShareable(new FJsonObject);
             MsgJson->SetStringField(TEXT("message"), Message->ToText().ToString());
-            
-            FString SourceLocation;
-            if (Message->SourceLocation.IsValid())
-            {
-                SourceLocation = FString::Printf(
-                    TEXT("%s:%d"),
-                    *Message->SourceLocation.FileName.ToString(),
-                    Message->SourceLocation.LineNumber
-                );
-            }
-            MsgJson->SetStringField(TEXT("location"), SourceLocation);
+            MsgJson->SetStringField(TEXT("location"), TEXT(""));
 
             switch (Message->GetSeverity())
             {
@@ -82,8 +75,10 @@ public:
             }
         }
 
+        bool bHasErrors = MessageLog.NumErrors > 0;
+
         TSharedPtr<FJsonObject> Result = MakeShareable(new FJsonObject);
-        Result->SetBoolField(TEXT("success"), !MessageLog.HasErrors());
+        Result->SetBoolField(TEXT("success"), !bHasErrors);
         Result->SetNumberField(TEXT("error_count"), ErrorsArray.Num());
         Result->SetNumberField(TEXT("warning_count"), WarningsArray.Num());
         Result->SetNumberField(TEXT("note_count"), NotesArray.Num());
@@ -91,15 +86,21 @@ public:
         Result->SetArrayField(TEXT("warnings"), WarningsArray);
         Result->SetArrayField(TEXT("notes"), NotesArray);
 
-        if (!MessageLog.HasErrors() && bSaveOnSuccess)
+        if (!bHasErrors && bSaveOnSuccess)
         {
             FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
             UPackage* Package = Blueprint->GetOutermost();
             if (Package)
             {
                 FString PackagePath = Package->GetName();
-                UPackage::SavePackage(Package, Blueprint, RF_Public | RF_Standalone, *PackagePath);
-                Result->SetBoolField(TEXT("saved"), true);
+                FString Filename;
+                if (FPackageName::TryConvertLongPackageNameToFilename(PackagePath, Filename))
+                {
+                    Filename += FPackageName::GetAssetPackageExtension();
+                    FSavePackageArgs SaveArgs;
+                    UPackage::SavePackage(Package, Blueprint, *Filename, SaveArgs);
+                    Result->SetBoolField(TEXT("saved"), true);
+                }
             }
         }
 

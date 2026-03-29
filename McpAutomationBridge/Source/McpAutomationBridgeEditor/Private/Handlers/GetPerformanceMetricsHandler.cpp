@@ -6,6 +6,8 @@
 #include "Engine/Engine.h"
 #include "GameFramework/GameStateBase.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
+#include "Misc/App.h"
 
 class FMcpGetPerformanceMetricsHandler : public FMcpCommandHandler
 {
@@ -29,7 +31,7 @@ private:
     {
         float DeltaTime = FApp::GetDeltaTime();
         float FPS = DeltaTime > 0.0f ? 1.0f / DeltaTime : 0.0f;
-        float SmoothedFPS = FApp::GetSmoothedFPS();
+        float SmoothedFPS = FPS;
 
         TSharedPtr<FJsonObject> FrameMetrics = MakeShareable(new FJsonObject);
         FrameMetrics->SetNumberField(TEXT("delta_time_ms"), DeltaTime * 1000.0f);
@@ -51,9 +53,6 @@ private:
         MemoryMetrics->SetNumberField(TEXT("peak_used_physical_mb"), MemStats.PeakUsedPhysical / 1024.0 / 1024.0);
         MemoryMetrics->SetNumberField(TEXT("total_virtual_mb"), MemStats.TotalVirtual / 1024.0 / 1024.0);
         MemoryMetrics->SetNumberField(TEXT("used_virtual_mb"), MemStats.UsedVirtual / 1024.0 / 1024.0);
-
-        FPlatformMemoryStats LocalMemStats = FPlatformMemory::GetLocalStats();
-        MemoryMetrics->SetNumberField(TEXT("local_used_physical_mb"), LocalMemStats.UsedPhysical / 1024.0 / 1024.0);
 
         OutMetrics->SetObjectField(TEXT("memory"), MemoryMetrics);
     }

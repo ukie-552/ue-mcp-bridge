@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Components/ActorComponent.h"
+#include "EngineUtils.h"
 
 class FMcpSelectActorsHandler : public FMcpCommandHandler
 {

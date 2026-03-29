@@ -12,6 +12,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Actor.h"
+#include "UObject/UObjectIterator.h"
 
 struct FComponentInfo
 {

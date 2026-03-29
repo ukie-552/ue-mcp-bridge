@@ -6,6 +6,7 @@
 #include "MovieScene.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Editor.h"
 
 class FMcpPlaySequenceHandler : public FMcpCommandHandler
 {

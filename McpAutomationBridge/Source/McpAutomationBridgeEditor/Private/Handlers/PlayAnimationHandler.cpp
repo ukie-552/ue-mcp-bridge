@@ -5,7 +5,9 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Animation/AnimSequence.h"
 #include "Editor.h"
+#include "EngineUtils.h"
 
 class FMcpPlayAnimationHandler : public FMcpCommandHandler
 {

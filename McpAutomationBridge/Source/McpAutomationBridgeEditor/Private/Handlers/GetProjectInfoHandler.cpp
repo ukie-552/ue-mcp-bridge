@@ -2,6 +2,8 @@
 #include "McpCommand.h"
 #include "Editor.h"
 #include "Misc/MessageDialog.h"
+#include "Misc/EngineVersion.h"
+#include "EngineUtils.h"
 
 class FMcpGetProjectInfoHandler : public FMcpCommandHandler
 {
@@ -22,9 +24,9 @@ public:
         Result->SetStringField(TEXT("engine_dir"), EngineDir);
 
         FString EngineVersion = FString::Printf(TEXT("%d.%d.%d"), 
-            GEngine->GetEngineVersion().GetMajor(), 
-            GEngine->GetEngineVersion().GetMinor(), 
-            GEngine->GetEngineVersion().GetPatch());
+            FEngineVersion::Current().GetMajor(), 
+            FEngineVersion::Current().GetMinor(), 
+            FEngineVersion::Current().GetPatch());
         Result->SetStringField(TEXT("engine_version"), EngineVersion);
 
         UWorld* World = GEditor->GetEditorWorldContext().World();

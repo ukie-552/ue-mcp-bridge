@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "EditorLevelLibrary.h"
 #include "Subsystems/EditorActorSubsystem.h"
+#include "Editor.h"
 
 class FMcpSpawnActorHandler : public FMcpCommandHandler
 {

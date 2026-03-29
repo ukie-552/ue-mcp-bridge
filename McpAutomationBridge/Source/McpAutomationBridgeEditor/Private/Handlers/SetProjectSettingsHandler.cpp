@@ -62,7 +62,7 @@ public:
                 }
                 else if (SettingName == TEXT("ResolutionScale"))
                 {
-                    UserSettings->SetResolutionScaleValue(FCString::Atof(*SettingValue));
+                    UserSettings->SetResolutionScaleValueEx(FCString::Atof(*SettingValue));
                     bSet = true;
                 }
 

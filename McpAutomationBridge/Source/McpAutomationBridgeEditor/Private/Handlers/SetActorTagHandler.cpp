@@ -2,6 +2,7 @@
 #include "McpCommand.h"
 #include "Editor.h"
 #include "GameFramework/Actor.h"
+#include "EngineUtils.h"
 
 class FMcpSetActorTagHandler : public FMcpCommandHandler
 {

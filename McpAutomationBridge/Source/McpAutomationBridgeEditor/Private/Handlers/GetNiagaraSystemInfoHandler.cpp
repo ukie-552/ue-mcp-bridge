@@ -3,6 +3,7 @@
 #include "NiagaraSystem.h"
 #include "NiagaraEmitter.h"
 #include "NiagaraEmitterHandle.h"
+#include "NiagaraTypes.h"
 
 class FMcpGetNiagaraSystemInfoHandler : public FMcpCommandHandler
 {
@@ -36,15 +37,23 @@ public:
         {
             TSharedPtr<FJsonObject> EmitterInfo = MakeShareable(new FJsonObject);
             EmitterInfo->SetStringField(TEXT("name"), Handle.GetName().ToString());
-            EmitterInfo->SetStringField(TEXT("unique_name"), Handle.GetUniqueEmitterName());
-            EmitterInfo->SetStringField(TEXT("id"), Handle.GetId().ToString());
-            EmitterInfo->SetBoolField(TEXT("is_enabled"), Handle.IsEnabled());
-            EmitterInfo->SetBoolField(TEXT("is_solo"), Handle.IsSolo());
-
-            UNiagaraEmitter* Emitter = Handle.GetInstance();
-            if (Emitter)
+            
+            FVersionedNiagaraEmitter VersionedEmitter = Handle.GetInstance();
+            if (VersionedEmitter.Emitter)
             {
-                EmitterInfo->SetStringField(TEXT("emitter_type"), Emitter->GetEmitterName().ToString());
+                EmitterInfo->SetStringField(TEXT("unique_name"), VersionedEmitter.Emitter->GetUniqueEmitterName());
+            }
+            else
+            {
+                EmitterInfo->SetStringField(TEXT("unique_name"), Handle.GetUniqueInstanceName());
+            }
+            
+            EmitterInfo->SetStringField(TEXT("id"), Handle.GetId().ToString());
+            EmitterInfo->SetBoolField(TEXT("is_enabled"), Handle.GetIsEnabled());
+
+            if (VersionedEmitter.Emitter)
+            {
+                EmitterInfo->SetStringField(TEXT("emitter_type"), VersionedEmitter.Emitter->GetUniqueEmitterName());
             }
 
             EmittersArray.Add(MakeShareable(new FJsonValueObject(EmitterInfo)));

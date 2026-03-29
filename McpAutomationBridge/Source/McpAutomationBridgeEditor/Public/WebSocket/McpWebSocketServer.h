@@ -25,6 +25,6 @@ private:
     TSharedPtr<IHttpRouter> HttpRouter;
     FHttpRouteHandle McpRouteHandle;
 
-    TSharedPtr<FHttpServerResponse> HandleMcpRequest(const FHttpServerRequest& Request);
+    TUniquePtr<FHttpServerResponse> HandleMcpRequest(const FHttpServerRequest& Request);
     void BroadcastMessage(const FString& Message);
 };

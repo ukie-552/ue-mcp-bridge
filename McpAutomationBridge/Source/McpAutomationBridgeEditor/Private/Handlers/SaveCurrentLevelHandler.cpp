@@ -2,6 +2,8 @@
 #include "McpCommand.h"
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
+#include "Editor.h"
+#include "Engine/World.h"
 
 class FMcpSaveCurrentLevelHandler : public FMcpCommandHandler
 {

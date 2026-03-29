@@ -2,6 +2,7 @@
 #include "McpCommand.h"
 #include "WidgetBlueprint.h"
 #include "Components/Widget.h"
+#include "Blueprint/WidgetTree.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 class FMcpRenameWidgetControlHandler : public FMcpCommandHandler

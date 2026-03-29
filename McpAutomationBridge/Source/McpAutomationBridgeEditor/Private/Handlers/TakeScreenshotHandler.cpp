@@ -6,6 +6,7 @@
 #include "HighResScreenshot.h"
 #include "ImageUtils.h"
 #include "FileHelpers.h"
+#include "UnrealClient.h"
 
 class FMcpTakeScreenshotHandler : public FMcpCommandHandler
 {
@@ -29,7 +30,7 @@ public:
         Params->TryGetBoolField(TEXT("show_ui"), bShowUI);
 
         FHighResScreenshotConfig& HighResConfig = GetHighResScreenshotConfig();
-        HighResConfig.SetResolution(FIntVector(Width, Height, 0));
+        HighResConfig.SetResolution(Width, Height);
         HighResConfig.bCaptureHDR = false;
         HighResConfig.bDumpBufferVisualizationTargets = false;
 

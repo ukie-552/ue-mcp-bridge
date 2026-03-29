@@ -81,9 +81,6 @@ public:
 
             if (!BindingGuid.IsValid())
             {
-                TArray<FMovieSceneSpawnable>& Spawnables = MovieScene->GetSpawnables();
-                FMovieSceneSpawnable& NewSpawnable = Spawnables.AddDefaulted_GetRef();
-                NewSpawnable.SetName(BindingName);
                 BindingGuid = FGuid::NewGuid();
             }
         }

@@ -7,6 +7,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/LightComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Editor.h"
+#include "EngineUtils.h"
+#include "UObject/TextProperty.h"
 
 class FMcpSetComponentPropertyHandler : public FMcpCommandHandler
 {
