@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "ue-mcp-bridge": {
+    "unreal-engine": {
       "command": "node",
       "args": [
-        "d:/Project/TestProject/ue-mcp-bridge-main/ue-mcp-server/dist/index.js"
+        "/Users/Zhuanz/Desktop/虚幻引擎-mcp/ue-mcp-server/dist/index.js"
       ],
       "env": {
         "MCP_AUTOMATION_HOST": "127.0.0.1",
